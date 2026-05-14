@@ -1,8 +1,8 @@
 import pandas
 
-df = pandas.read_csv("hotels.csv", dtype={"id": str})
-df_cards = pandas.read_csv("cards.csv", dtype=str).to_dict(orient="records")
-df_cards_security = pandas.read_csv("card-security.csv", dtype=str)
+df = pandas.read_csv("data/hotels.csv", dtype={"id": str})
+df_cards = pandas.read_csv("data/cards.csv", dtype=str).to_dict(orient="records")
+df_cards_security = pandas.read_csv("data/card-security.csv", dtype=str)
 
 
 class Hotel:
@@ -20,6 +20,10 @@ class Hotel:
         availability = df.loc[df["id"] == self.hotel_id, "available"].squeeze()
 
         return availability == "yes"
+
+    @classmethod
+    def get_hotel_count(cls, data):
+        return len(data)
 
 
 class SpaHotel(Hotel):
@@ -52,11 +56,21 @@ class ReservationTicket:
         content = f"""
         Thank you for your resevation!
         Here are your booking data:
-        Name: {self.customer_name}
+        Name: {self.the_customer_name}
         Hotel name: {self.hotel.name}
         """
 
         return content
+
+    @property
+    def the_customer_name(self):
+        name = self.customer_name.strip()
+        name = name.title()
+        return name
+
+    @staticmethod
+    def convert(amount):
+        return amount * 1.2
 
 
 class CreditCard:
