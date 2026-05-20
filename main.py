@@ -111,3 +111,46 @@ if st.session_state.page == "list":
 # page 2, booking details and payment
 elif st.session_state.page == "booking":
     hotel_data = st.session_state.selected_hotel
+
+    st.button("⬅️ Back to Hotels", on_click=go_to_list)
+    st.title(f"Booking: {hotel_data['name']}")
+
+    col_details, col_payment = st.columns([1, 1], gap="large")
+
+    with st.form("booking_master_form"):
+        with col_details:
+            st.subheader("1. Stay Details")
+            full_name = st.text_input("Guest Full Name")
+
+            # date selection (check in , check out)
+            today = datetime.now()
+            date_range = st.date_input(
+                "Select Stay Dates", [today, today + timedelta(days=2)]
+            )
+            guests = st.number_input(
+                "Number of Guests",
+                min_value=1,
+                max_value=int(hotel_data["capacity"]),
+                value=1,
+            )
+            add_spa = st.checkbox("Include Premium SPA Access")
+
+        with col_payment:
+            st.subheader("2. Secure Payment")
+            card_num = st.text_input("Card Number (16 digits)")
+
+            c1, c2 = st.columns(2)
+            card_exp = c1.text_input("Expiry (MM/YY)")
+            card_cvc = c2.text_input("CVC", type="password")
+
+            card_pwd = st.text_input("Security Password", type="password")
+
+            st.info(f"Total to pay: Apply Logic Later")
+
+        # submit button at the bottom
+        submit_btn = st.form_submit_button(
+            "Complete Reservation", type="primary", use_container_width=True
+        )
+
+        if submit_btn:
+            card = SecureCreditCard(card_num, card_exp, full_name, card_cvc)
