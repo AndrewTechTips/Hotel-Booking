@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
-from modules import SpaHotel, SecureCreditCard, ReservationTicket
+from modules import SpaHotel, SecureCreditCard, ReservationTicket, ticket
 
 # Ui config
 st.set_page_config(
@@ -85,7 +85,7 @@ if st.session_state.page == "list":
             # rendering the card
             st.markdown(
                 f"""
-            <div> class = "hotel-card">
+            <div class="hotel-card">
                 <div>
                     <h3>{row['name']}</h3>
                     <p>📍{row['city']}</p>
@@ -102,7 +102,7 @@ if st.session_state.page == "list":
                 st.button(
                     f"Select {row['name']}",
                     key=f"btn_{row['id']}",
-                    on_click=go_to_booking(),
+                    on_click=go_to_booking,
                     args=(row.to_dict(),),
                 )
             else:
@@ -154,3 +154,26 @@ elif st.session_state.page == "booking":
 
         if submit_btn:
             card = SecureCreditCard(card_num, card_exp, full_name, card_cvc)
+
+            if not card.validate(df_cards):
+                st.error("Payment failed: Invalid card credentials.")
+            elif not card.authenticate(card_pwd, dict_security):
+                st.error("Payment failed: Incorrect security password.")
+            elif len(date_range) < 2:
+                st.warning("Please select both Check-in and Check-out dates.")
+            else:
+                hotel = SpaHotel(
+                    hotel_data["id"],
+                    hotel_data["name"],
+                    hotel_data["city"],
+                    hotel_data["capacity"],
+                    hotel_data["available"],
+                )
+                if add_spa:
+                    hotel.book_spa()
+                hotel.book()
+
+                ticket = ReservationTicket(full_name, hotel)
+                st.success("Success! Your room has been reserved.")
+                st.balloons()
+                st.code(ticket.generate_text(), language="text")
