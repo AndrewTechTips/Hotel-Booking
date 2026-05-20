@@ -112,68 +112,100 @@ if st.session_state.page == "list":
 elif st.session_state.page == "booking":
     hotel_data = st.session_state.selected_hotel
 
-    st.button("⬅️ Back to Hotels", on_click=go_to_list)
-    st.title(f"Booking: {hotel_data['name']}")
+    # back button and title centered
+    _, center_col, _ = st.columns([1, 2, 1])
 
-    col_details, col_payment = st.columns([1, 1], gap="large")
+    with center_col:
+        if st.button("⬅️ Back to Hotels"):
+            go_to_list()
+            st.rerun()
 
-    with st.form("booking_master_form"):
-        with col_details:
-            st.subheader("1. Stay Details")
-            full_name = st.text_input("Guest Full Name")
+        st.title(f"Book your stay at {hotel_data['name']}")
+        st.markdown(f"📍 {hotel_data['city']} | 👥 Max {hotel_data['capacity']} guests")
+        st.divider()
 
-            # date selection (check in , check out)
-            today = datetime.now()
-            date_range = st.date_input(
-                "Select Stay Dates", [today, today + timedelta(days=2)]
-            )
-            guests = st.number_input(
-                "Number of Guests",
-                min_value=1,
-                max_value=int(hotel_data["capacity"]),
-                value=1,
-            )
-            add_spa = st.checkbox("Include Premium SPA Access")
+        # we wrap everything in a single form for a clean vertical flow
 
-        with col_payment:
-            st.subheader("2. Secure Payment")
-            card_num = st.text_input("Card Number (16 digits)")
+        with st.form("booking_master_form", clear_on_submit=False):
+            # 1 stay details
+            st.markdown("### 📋 Step 1: Stay Details")
+            full_name = st.text_input("Full Name", placeholder="e.g. John Smith")
 
-            c1, c2 = st.columns(2)
-            card_exp = c1.text_input("Expiry (MM/YY)")
-            card_cvc = c2.text_input("CVC", type="password")
+            col_date, col_guests = st.columns([2, 1])
 
-            card_pwd = st.text_input("Security Password", type="password")
-
-            st.info(f"Total to pay: Apply Logic Later")
-
-        # submit button at the bottom
-        submit_btn = st.form_submit_button(
-            "Complete Reservation", type="primary", use_container_width=True
-        )
-
-        if submit_btn:
-            card = SecureCreditCard(card_num, card_exp, full_name, card_cvc)
-
-            if not card.validate(df_cards):
-                st.error("Payment failed: Invalid card credentials.")
-            elif not card.authenticate(card_pwd, dict_security):
-                st.error("Payment failed: Incorrect security password.")
-            elif len(date_range) < 2:
-                st.warning("Please select both Check-in and Check-out dates.")
-            else:
-                hotel = SpaHotel(
-                    hotel_data["id"],
-                    hotel_data["name"],
-                    hotel_data["city"],
-                    hotel_data["capacity"],
-                    hotel_data["available"],
+            with col_date:
+                # date selection (check in , check out)
+                today = datetime.now()
+                date_range = st.date_input(
+                    "Check-in & Check-out", [today, today + timedelta(days=2)]
                 )
-                if add_spa:
-                    hotel.book_spa()
-                hotel.book()
+            with col_guests:
+                guests = st.number_input(
+                    "Guests",
+                    min_value=1,
+                    max_value=int(hotel_data["capacity"]),
+                    value=1,
+                )
 
-                ticket = ReservationTicket(full_name, hotel)
-                st.success("Success! Your room has been reserved.")
-                st.balloons()
-                st.code(ticket.generate_text(), language="text")
+            add_spa = st.checkbox("Include VIP SPA Package (+ $50)")
+
+            st.markdown("<br>", unsafe_allow_html=True)  # Spacer
+            st.divider()
+
+            # 2 secure payment
+            st.markdown("### 💳 Step 2: Secure Payment")
+            card_num = st.text_input(
+                "Card Number", max_chars=16, placeholder="0000 0000 0000 0000"
+            )
+
+            c1, c2, c3 = st.columns([2, 1, 1])
+            card_exp = c1.text_input("Expiry", placeholder="MM/YY")
+            card_cvc = c2.text_input("CVC", type="password", placeholder="***")
+            card_pwd = c3.text_input("PIN", type="password", placeholder="****")
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            # summary, submit
+
+            st.markdown(
+                f"""
+                    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border-left: 4px solid #3fb950;">
+                    <small style="color: #8b949e;">ORDER SUMMARY</small><br>
+                    <strong>{hotel_data['name']}</strong> - {guests} Guest(s)<br>
+                    <small>Booking guaranteed via SecureCard™</small>
+                    </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            submit_btn = st.form_submit_button(
+                "Confirm Reservation", type="primary", use_container_width=True
+            )
+
+            if submit_btn:
+                card = SecureCreditCard(card_num, card_exp, full_name, card_cvc)
+
+                if not card.validate(df_cards):
+                    st.error("Payment failed: Invalid card credentials.")
+                elif not card.authenticate(card_pwd, dict_security):
+                    st.error("Payment failed: Incorrect security password.")
+                elif len(date_range) < 2:
+                    st.warning("Please select both Check-in and Check-out dates.")
+                else:
+                    hotel = SpaHotel(
+                        hotel_data["id"],
+                        hotel_data["name"],
+                        hotel_data["city"],
+                        hotel_data["capacity"],
+                        hotel_data["available"],
+                    )
+                    if add_spa:
+                        hotel.book_spa()
+                    hotel.book()
+
+                    ticket = ReservationTicket(full_name, hotel)
+                    st.success("Success! Your room has been reserved.")
+                    st.balloons()
+                    st.code(ticket.generate_text(), language="text")
