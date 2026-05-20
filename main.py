@@ -43,3 +43,71 @@ def load_data():
     dict_security = dict(zip(df_sec.number, df_sec.password))
 
     return df_hotels, df_cards, dict_security
+
+
+df_hotels, df_cards, dict_security = load_data()
+
+
+# state management
+if "page" not in st.session_state:
+    st.session_state.page = "list"
+if "selected_hotel" not in st.session_state:
+    st.session_state.selected_hotel = None
+
+
+# navigation logic
+def go_to_booking(hotel_row):
+    st.session_state.selected_hotel = hotel_row
+    st.session_state.page = "booking"
+
+
+def go_to_list():
+    st.session_state.selected_hotel = None
+    st.session_state.page = "list"
+
+
+# page 1 , hotel view
+if st.session_state.page == "list":
+    st.title("🌌 Explore Destinations")
+    st.markdown("Find and book the best luxury hotels around the world.")
+    st.divider()
+
+    # create a grid with 3 columns
+    cols = st.columns(3)
+
+    for index, row in df_hotels.iterrows():
+        # distribute hotels across columns
+        with cols[index % 3]:
+            is_available = row["available"] == "yes"
+            status_class = "status-available" if is_available else "status-booked"
+            status_text = "● Available" if is_available else "● Fully Booked"
+
+            # rendering the card
+            st.markdown(
+                f"""
+            <div> class = "hotel-card">
+                <div>
+                    <h3>{row['name']}</h3>
+                    <p>📍{row['city']}</p>
+                    <p>👥Max Capacity: {row['capacity']} guests</p>
+                    <span class ="{status_class}">{status_text}</span>
+                </div>
+            </div>
+            """,
+                unsafe_allow_html=True,
+            )
+
+            # action button
+            if is_available:
+                st.button(
+                    f"Select {row['name']}",
+                    key=f"btn_{row['id']}",
+                    on_click=go_to_booking(),
+                    args=(row.to_dict(),),
+                )
+            else:
+                st.button("Unavailable", key=f"btn_{row['id']}", disabled=True)
+
+# page 2, booking details and payment
+elif st.session_state.page == "booking":
+    hotel_data = st.session_state.selected_hotel
