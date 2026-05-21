@@ -1,4 +1,6 @@
-id,name,city,capacity,available
-134,Tourist Sunny Apartment,Anchorage,4,no
-188,Snow Palace,New Delhi,5,no
-655,City Break Inn,Porto-Novo,3,no
+id,name,city,capacity,available,price_per_night,rating,amenities,description
+134,Tourist Sunny Apartment,Anchorage,4,no,185,4.2,Free Wi-Fi|Kitchen|Heating,A cozy and fully-equipped apartment in the heart of Anchorage. Perfect for families looking for a warm retreat after a day of glacier exploring. Self check-in available.
+188,Snow Palace,New Delhi,5,no,450,4.9,Spa|Indoor Pool|Fine Dining|Valet,Experience royal luxury at the Snow Palace. Featuring world-class dining prepared by Michelin-star chefs heated indoor pools and opulent suites tailored for royalty.
+655,City Break Inn,Porto-Novo,3,yes,110,4.5,Breakfast Included|Gym|Shuttle,Modern vibrant and centrally located. City Break Inn is your perfect hub for business or leisure offering express check-in premium coffee and a 24/7 fitness center.
+901,Oceanview Retreat,Malibu,2,yes,650,4.9,Private Beach|Infinity Pool|Butler,Wake up to the sound of crashing waves. This exclusive adults-only retreat offers unparalleled ocean views personalized 24/7 butler service and private cabanas.
+204,Mountain Whisper Resort,Brasov,4,yes,220,4.7,Ski Access|Sauna|Fireplace,Nestled deep in the Carpathian mountains this premium cabin offers direct ski-in/ski-out access an authentic wood-burning fireplace and traditional organic meals.
