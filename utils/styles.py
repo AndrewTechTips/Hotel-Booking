@@ -55,18 +55,21 @@ def inject_premium_styles():
                 margin-bottom: 12px;
                 text-shadow: 0 0 20px rgba(65, 105, 225, 0.5);
             }
+            div[data-testid="stButton"] button[kind="primary"],
             div[data-testid="stFormSubmitButton"] button {
                 background: linear-gradient(135deg, #4169e1, #2b4ba3) !important;
                 border: none !important;
                 box-shadow: 0 4px 15px rgba(65, 105, 225, 0.3) !important;
                 transition: all 0.3s ease !important;
             }
+            div[data-testid="stButton"] button[kind="primary"] p,
             div[data-testid="stFormSubmitButton"] button p {
                 color: #ffffff !important;
                 font-weight: 700 !important;
                 font-size: 1.05em !important;
                 letter-spacing: 0.5px !important;
             }
+            div[data-testid="stButton"] button[kind="primary"]:hover,
             div[data-testid="stFormSubmitButton"] button:hover {
                 transform: translateY(-2px);
                 box-shadow: 0 8px 25px rgba(65, 105, 225, 0.6) !important;

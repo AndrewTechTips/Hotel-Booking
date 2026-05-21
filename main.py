@@ -1,18 +1,27 @@
 import streamlit as st
+
+# 1. Application Configuration
+# This MUST be the very first Streamlit command to ensure the app uses the full screen width.
+st.set_page_config(
+    page_title="Lux Booking Engine", layout="wide", initial_sidebar_state="collapsed"
+)
+
 import pandas as pd
 import time
 from datetime import datetime, timedelta
 from modules import SpaHotel, SecureCreditCard, ReservationTicket
 from utils.styles import inject_premium_styles
 
-# Initialize responsive engine styles
+# Initialize our custom CSS styles
 inject_premium_styles()
 
 
 @st.cache_data
 def load_data():
-    """Reads structural database references cleanly via Pandas."""
+    """Fetches and prepares the hotel catalog and security data."""
     df_hotels = pd.read_csv("data/hotels.csv", dtype={"id": str})
+
+    # Ensure numerical columns are properly formatted for our sorting logic
     df_hotels["price_per_night"] = pd.to_numeric(df_hotels["price_per_night"])
     df_hotels["rating"] = pd.to_numeric(df_hotels["rating"])
     df_hotels["capacity"] = pd.to_numeric(df_hotels["capacity"])
@@ -20,17 +29,20 @@ def load_data():
     df_cards = pd.read_csv("data/cards.csv", dtype=str).to_dict(orient="records")
     df_sec = pd.read_csv("data/card-security.csv", dtype=str)
     dict_security = dict(zip(df_sec.number, df_sec.password))
+
     return df_hotels, df_cards, dict_security
 
 
 df_hotels, df_cards, dict_security = load_data()
 
+# Manage the user's current view within the app
 if "page" not in st.session_state:
     st.session_state.page = "list"
 if "selected_hotel" not in st.session_state:
     st.session_state.selected_hotel = None
 
 
+# Navigation helpers
 def view_details(hotel_row):
     st.session_state.selected_hotel = hotel_row
     st.session_state.page = "details"
@@ -45,7 +57,9 @@ def go_to_list():
     st.session_state.page = "list"
 
 
-# Catalog Interface Screen
+# ==========================================
+# PAGE 1: HOTEL CATALOG & SEARCH
+# ==========================================
 if st.session_state.page == "list":
     st.markdown(
         "<h1><i class='fa-solid fa-gem' style='color: #4169e1; margin-right: 15px;'></i>Discover Luxury Stays</h1>",
@@ -56,6 +70,7 @@ if st.session_state.page == "list":
         unsafe_allow_html=True,
     )
 
+    # Search and filter controls
     f_col1, f_col2, f_col3, f_col4, f_col5 = st.columns(
         [2.5, 1.5, 1, 1, 1], gap="medium"
     )
@@ -86,6 +101,8 @@ if st.session_state.page == "list":
         "<hr style='border: 1px solid rgba(255,255,255,0.05); margin-bottom: 30px;'>",
         unsafe_allow_html=True,
     )
+
+    # Apply user filters to the data
     df_display = df_hotels.copy()
 
     if search_query:
@@ -114,6 +131,7 @@ if st.session_state.page == "list":
     elif sort_by == "Highest Rated":
         df_display = df_display.sort_values(by="rating", ascending=False)
 
+    # Render the results
     if df_display.empty:
         st.markdown(
             """
@@ -128,6 +146,7 @@ if st.session_state.page == "list":
     else:
         cols = st.columns(3, gap="large")
         df_display = df_display.reset_index(drop=True)
+
         for index, row in df_display.iterrows():
             with cols[index % 3]:
                 is_available = row["available"] == "yes"
@@ -162,7 +181,9 @@ if st.session_state.page == "list":
                     use_container_width=True,
                 )
 
-# Rich Presentation Details Screen
+# ==========================================
+# PAGE 2: PROPERTY DETAILS
+# ==========================================
 elif st.session_state.page == "details":
     h = st.session_state.selected_hotel
     is_avail = h["available"] == "yes"
@@ -205,11 +226,13 @@ elif st.session_state.page == "details":
 
     with col_info:
         tab1, tab2, tab3 = st.tabs(["The Story", "Amenities", "Policies"])
+
         with tab1:
             st.markdown(
                 f"<div style='line-height: 1.8; color: #a1b0c0; font-size: 1.1em; padding-top: 15px; text-align: justify;'>{h['description']}</div>",
                 unsafe_allow_html=True,
             )
+
         with tab2:
             st.markdown("<br>", unsafe_allow_html=True)
             amenities_html = "<div style='display: flex; flex-wrap: wrap; gap: 12px;'>"
@@ -217,6 +240,7 @@ elif st.session_state.page == "details":
                 amenities_html += f"<span style='background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 10px 18px; border-radius: 8px; font-size: 0.95em; color: #c9d1d9;'><i class='fa-solid fa-check' style='color: #4169e1; margin-right: 8px;'></i>{am.strip()}</span>"
             amenities_html += "</div>"
             st.markdown(amenities_html, unsafe_allow_html=True)
+
         with tab3:
             st.markdown(
                 f"""
@@ -267,9 +291,13 @@ elif st.session_state.page == "details":
             st.button("Join Waitlist", disabled=True, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
-# Secure Checkout Transaction Block
+# ==========================================
+# PAGE 3: SECURE CHECKOUT
+# ==========================================
 elif st.session_state.page == "booking":
     hotel_data = st.session_state.selected_hotel
+
+    # Wide center column for the checkout form
     _, center_col, _ = st.columns([1, 2.5, 1])
 
     with center_col:
@@ -291,7 +319,7 @@ elif st.session_state.page == "booking":
             unsafe_allow_html=True,
         )
 
-        # Section 1: Reactive Configuration (Placed outside the form to update instantly)
+        # Step 1: Stay Configuration (Updating price in real-time without form submission)
         st.markdown(
             "<h3 style='font-size: 1.2em; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 20px;'><i class='fa-solid fa-clipboard-user icon-accent'></i> Guest Details</h3>",
             unsafe_allow_html=True,
@@ -314,7 +342,7 @@ elif st.session_state.page == "booking":
         )
         add_spa = st.checkbox("Include VIP Spa Sanctuary Access (+ $50 flat fee)")
 
-        # Real-time reactive pricing execution
+        # Execute real-time pricing math
         base_price_per_night = float(hotel_data.get("price_per_night", 120))
         nights = (
             (date_range[1] - date_range[0]).days
@@ -335,7 +363,7 @@ elif st.session_state.page == "booking":
             unsafe_allow_html=True,
         )
 
-        # Section 2: Isolated Secure Form (Prevents refreshing tokens on every character keystroke)
+        # Step 2: Payment Authorization (Secure Form)
         with st.form("payment_form", clear_on_submit=False, border=False):
             st.markdown(
                 "<h3 style='font-size: 1.2em; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 20px;'><i class='fa-regular fa-credit-card icon-accent'></i> Payment Clearing Method</h3>",
@@ -350,14 +378,13 @@ elif st.session_state.page == "booking":
             card_cvc = c2.text_input(
                 "CVC", type="password", max_chars=3, placeholder="***"
             )
-            card_pwd = c3.text_input(
-                "PIN", type="password", max_chars=4, placeholder="****"
-            )
+            card_pwd = c3.text_input("PIN", type="password", placeholder="****")
 
             submit_btn = st.form_submit_button(
                 "Authorize Secure Transaction", use_container_width=True
             )
 
+        # Handle transaction validation
         if submit_btn:
             card = SecureCreditCard(card_num, card_exp, full_name, card_cvc)
 
@@ -376,9 +403,7 @@ elif st.session_state.page == "booking":
                     "Please ensure check-in and check-out dates are populated correctly."
                 )
             else:
-                with st.spinner(
-                    "Encrypting architecture pipelines and checking liquidity..."
-                ):
+                with st.spinner("Encrypting connection and processing payment..."):
                     time.sleep(1.5)
 
                 hotel = SpaHotel(
@@ -392,14 +417,17 @@ elif st.session_state.page == "booking":
                     hotel_data["amenities"],
                     hotel_data["description"],
                 )
+
                 if add_spa:
                     hotel.book_spa()
                 hotel.book()
 
+                # Update local database state
                 df_hotels.loc[df_hotels["id"] == hotel.id, "available"] = "no"
                 df_hotels.to_csv("data/hotels.csv", index=False)
                 load_data.clear()
 
+                # Generate the premium PDF receipt
                 ticket = ReservationTicket(
                     full_name,
                     hotel,
