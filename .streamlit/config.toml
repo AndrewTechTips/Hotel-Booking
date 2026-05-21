@@ -1,0 +1,19 @@
+[theme]
+# The primary accent color for interactive elements (royal blue to match the theme)
+primaryColor = "#4169e1"
+
+# The main background color (dark navy/space color)
+backgroundColor = "#090a0f"
+
+# The background of secondary elements like sidebars, forms, and input fields
+secondaryBackgroundColor = "#11151f"
+
+# Text color
+textColor = "#f0f6fc"
+
+# Font family
+font = "sans serif"
+
+[client]
+# Disables the "Manage App" ribbon on the top right for a cleaner look
+toolbarMode = "minimal"
