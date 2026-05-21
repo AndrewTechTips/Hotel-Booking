@@ -1,13 +1,14 @@
 import streamlit as st
 
-# 1. Application Configuration
-# This MUST be the very first Streamlit command to ensure the app uses the full screen width.
+# Application Configuration
 st.set_page_config(
     page_title="Lux Booking Engine", layout="wide", initial_sidebar_state="collapsed"
 )
 
 import pandas as pd
 import time
+import os
+
 from datetime import datetime, timedelta
 from modules import SpaHotel, SecureCreditCard, ReservationTicket
 from utils.styles import inject_premium_styles
@@ -18,16 +19,22 @@ inject_premium_styles()
 
 @st.cache_data
 def load_data():
-    """Fetches and prepares the hotel catalog and security data."""
-    df_hotels = pd.read_csv("data/hotels.csv", dtype={"id": str})
+    """Loads and formats the application data safely across environments."""
+    # Build absolute paths to avoid cloud deployment directory issues
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    hotels_path = os.path.join(base_dir, "data", "hotels.csv")
+    cards_path = os.path.join(base_dir, "data", "cards.csv")
+    security_path = os.path.join(base_dir, "data", "card-security.csv")
 
-    # Ensure numerical columns are properly formatted for our sorting logic
+    # Load and cast hotel metrics for accurate sorting and filtering
+    df_hotels = pd.read_csv(hotels_path, dtype={"id": str})
     df_hotels["price_per_night"] = pd.to_numeric(df_hotels["price_per_night"])
     df_hotels["rating"] = pd.to_numeric(df_hotels["rating"])
     df_hotels["capacity"] = pd.to_numeric(df_hotels["capacity"])
 
-    df_cards = pd.read_csv("data/cards.csv", dtype=str).to_dict(orient="records")
-    df_sec = pd.read_csv("data/card-security.csv", dtype=str)
+    # Format payment records for fast lookups
+    df_cards = pd.read_csv(cards_path, dtype=str).to_dict(orient="records")
+    df_sec = pd.read_csv(security_path, dtype=str)
     dict_security = dict(zip(df_sec.number, df_sec.password))
 
     return df_hotels, df_cards, dict_security
