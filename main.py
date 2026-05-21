@@ -148,8 +148,6 @@ elif st.session_state.page == "booking":
                 )
 
             add_spa = st.checkbox("Include VIP SPA Package (+ $50)")
-
-            st.markdown("<br>", unsafe_allow_html=True)  # Spacer
             st.divider()
 
             # 2 secure payment
@@ -163,18 +161,23 @@ elif st.session_state.page == "booking":
             card_cvc = c2.text_input("CVC", type="password", placeholder="***")
             card_pwd = c3.text_input("PIN", type="password", placeholder="****")
 
-            st.markdown("<br>", unsafe_allow_html=True)
+            # pricing
+            base_price_per_night = 120
+            nights = (date_range[1] - date_range[0]).days if len(date_range) == 2 else 0
+            total_price = (base_price_per_night * guests * nights) + (
+                50 if add_spa else 0
+            )
 
             # summary, submit
 
             st.markdown(
                 f"""
-                    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border-left: 4px solid #3fb950;">
+                <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border-left: 4px solid #3fb950;">
                     <small style="color: #8b949e;">ORDER SUMMARY</small><br>
-                    <strong>{hotel_data['name']}</strong> - {guests} Guest(s)<br>
-                    <small>Booking guaranteed via SecureCard™</small>
-                    </div>
-                """,
+                    <strong>{nights} Night(s) for {guests} Guest(s)</strong><br>
+                    <h3>Total: ${total_price:.2f}</h3>
+                </div>
+            """,
                 unsafe_allow_html=True,
             )
 
@@ -184,28 +187,50 @@ elif st.session_state.page == "booking":
                 "Confirm Reservation", type="primary", use_container_width=True
             )
 
-            if submit_btn:
-                card = SecureCreditCard(card_num, card_exp, full_name, card_cvc)
+        if submit_btn:
+            card = SecureCreditCard(card_num, card_exp, full_name, card_cvc)
 
-                if not card.validate(df_cards):
-                    st.error("Payment failed: Invalid card credentials.")
-                elif not card.authenticate(card_pwd, dict_security):
-                    st.error("Payment failed: Incorrect security password.")
-                elif len(date_range) < 2:
-                    st.warning("Please select both Check-in and Check-out dates.")
-                else:
-                    hotel = SpaHotel(
-                        hotel_data["id"],
-                        hotel_data["name"],
-                        hotel_data["city"],
-                        hotel_data["capacity"],
-                        hotel_data["available"],
+            if not card.validate(df_cards):
+                st.error("Authentication failed: Check your card details.")
+            elif not card.authenticate(card_pwd, dict_security):
+                st.error("Security alert: Incorrect card password.")
+            elif len(date_range) < 2 or nights == 0:
+                st.warning("Please select a valid check-in and check-out date.")
+            else:
+                hotel = SpaHotel(
+                    hotel_data["id"],
+                    hotel_data["name"],
+                    hotel_data["city"],
+                    hotel_data["capacity"],
+                    hotel_data["available"],
+                )
+                if add_spa:
+                    hotel.book_spa()
+
+                hotel.book()
+
+                df_hotels.loc[df_hotels["id"] == hotel.id, "available"] = "no"
+                df_hotels.to_csv("data/hotels.csv", index=False)
+
+                load_data.clear()
+
+                ticket = ReservationTicket(
+                    full_name,
+                    hotel,
+                    str(date_range[0]),
+                    str(date_range[1]),
+                    total_price,
+                )
+                pdf_filename = ticket.generate_pdf(f"ticket_{hotel.id}.pdf")
+
+                st.success("Payment successful! Your digital ticket is ready.")
+                st.balloons()
+
+                with open(pdf_filename, "rb") as pdf_file:
+                    st.download_button(
+                        label="📄 Download PDF Ticket",
+                        data=pdf_file,
+                        file_name=pdf_filename,
+                        mime="application/pdf",
+                        type="primary",
                     )
-                    if add_spa:
-                        hotel.book_spa()
-                    hotel.book()
-
-                    ticket = ReservationTicket(full_name, hotel)
-                    st.success("Success! Your room has been reserved.")
-                    st.balloons()
-                    st.code(ticket.generate_text(), language="text")
