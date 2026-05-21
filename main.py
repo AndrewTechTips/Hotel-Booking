@@ -323,7 +323,7 @@ elif st.session_state.page == "booking":
             unsafe_allow_html=True,
         )
 
-        # Step 1: Stay Configuration (Updating price in real-time without form submission)
+        # step 1: Stay Configuration (Updating price in real-time without form submission)
         st.markdown(
             "<h3 style='font-size: 1.2em; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 20px;'><i class='fa-solid fa-clipboard-user icon-accent'></i> Guest Details</h3>",
             unsafe_allow_html=True,
@@ -367,7 +367,7 @@ elif st.session_state.page == "booking":
             unsafe_allow_html=True,
         )
 
-        # Step 2: Payment Authorization
+        # step 2: Payment Authorization
         with st.form("payment_form", clear_on_submit=False, border=False):
             st.markdown(
                 "<h3 style='font-size: 1.2em; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 20px;'><i class='fa-regular fa-credit-card icon-accent'></i> Payment Clearing Method</h3>",
