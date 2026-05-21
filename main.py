@@ -64,9 +64,8 @@ def go_to_list():
     st.session_state.page = "list"
 
 
-# ==========================================
-# PAGE 1: HOTEL CATALOG & SEARCH
-# ==========================================
+# Page 1, hotel catalog & search
+
 if st.session_state.page == "list":
     st.markdown(
         "<h1><i class='fa-solid fa-gem' style='color: #4169e1; margin-right: 15px;'></i>Discover Luxury Stays</h1>",
@@ -188,9 +187,8 @@ if st.session_state.page == "list":
                     use_container_width=True,
                 )
 
-# ==========================================
-# PAGE 2: PROPERTY DETAILS
-# ==========================================
+# Page 2, property details
+
 elif st.session_state.page == "details":
     h = st.session_state.selected_hotel
     is_avail = h["available"] == "yes"
@@ -298,9 +296,8 @@ elif st.session_state.page == "details":
             st.button("Join Waitlist", disabled=True, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
-# ==========================================
-# PAGE 3: SECURE CHECKOUT
-# ==========================================
+# Page 3, secure checkout
+
 elif st.session_state.page == "booking":
     hotel_data = st.session_state.selected_hotel
 
