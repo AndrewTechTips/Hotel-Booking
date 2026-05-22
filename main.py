@@ -390,7 +390,7 @@ elif st.session_state.page == "booking":
                 "Authorize Secure Transaction", use_container_width=True
             )
 
-        # Handle transaction validation
+        # Handle transaction validation, w card formatting
         if submit_btn:
             card_num = "".join(filter(str.isdigit, card_num_raw))
             card_exp = card_exp_raw.strip()
