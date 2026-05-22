@@ -373,12 +373,14 @@ elif st.session_state.page == "booking":
                 "<h3 style='font-size: 1.2em; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 20px;'><i class='fa-regular fa-credit-card icon-accent'></i> Payment Clearing Method</h3>",
                 unsafe_allow_html=True,
             )
-            card_num = st.text_input(
-                "Card Number", max_chars=16, placeholder="0000 0000 0000 0000"
+            card_num_raw = st.text_input(
+                "Card Number", max_chars=19, placeholder="1234 5678 9012 3456"
             )
 
             c1, c2, c3 = st.columns([2, 1, 1])
-            card_exp = c1.text_input("Expiry Date", placeholder="MM/YY")
+            card_exp_raw = c1.text_input(
+                "Expiry Date", max_chars=5, placeholder="MM/YY or MMYY"
+            )
             card_cvc = c2.text_input(
                 "CVC", type="password", max_chars=3, placeholder="***"
             )
@@ -390,6 +392,12 @@ elif st.session_state.page == "booking":
 
         # Handle transaction validation
         if submit_btn:
+            card_num = "".join(filter(str.isdigit, card_num_raw))
+            card_exp = card_exp_raw.strip()
+
+            if len(card_exp) == 4 and card_exp.isdigit():
+                card_exp = f"{card_exp[:2]}/{card_exp[2:]}"
+
             card = SecureCreditCard(card_num, card_exp, full_name, card_cvc)
 
             if not card.validate(df_cards):
